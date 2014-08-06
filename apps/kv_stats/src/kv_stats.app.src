@@ -1,0 +1,13 @@
+{application, kv_stats,
+ [
+  {description, "Stats module"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  folsom
+                 ]},
+  {mod, { kv_stats_app, []}},
+  {env, []}
+ ]}.
