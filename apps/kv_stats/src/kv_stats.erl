@@ -5,7 +5,8 @@
 
 
 do_test(Params) ->
-  supervisor:start_child(kv_test_sup, [Params]).
+  supervisor:start_child(kv_test_sup, [Params]),
+  timer:sleep(maps:get(time, Params) + 4000).
 
 start() -> start(kv_stats).
 
@@ -21,7 +22,14 @@ metrics_init() ->
 
 metrics_get() ->
   MetricsList = [?WRITE, ?READ],
-  [{Name, folsom_metrics:get_metric_value(Name)} || Name <- MetricsList].
+  [{Name, metric_get(Name)} || Name <- MetricsList].
+
+metric_get(Name) ->
+  D = folsom_metrics:get_metric_value(Name),
+  One = proplists:get_value(one, D),
+  %Count = proplists:get_value(count, D),
+  %[{count, Count}, {num, One}],
+  One.
 
 restart_metric(Name) ->
   case folsom_metrics:new_meter(Name) of
