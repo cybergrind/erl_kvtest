@@ -18,7 +18,8 @@ stop() ->
 
 -record(st, {db, size, loop_time=100, operation}).
 init([Params, Operation]) ->
-  process_flag(priority, max),
+  process_flag(priority, low),
+  link(whereis(kv_test_srv)),
   State = #st{db = maps:get(db, Params),
               size = maps:get(size, Params),
               loop_time = maps:get(interval, Params, 100),
@@ -40,8 +41,9 @@ handle_cast(Req, State) ->
 handle_info(loop, #st{db=Db, size=S, loop_time=L,
                       operation=Operation}=State) ->
   K = integer_to_binary(random:uniform(S)),
-  Operation(Db, K, K),
-  erlang:send_after(L, self(), loop),
+  catch Operation(Db, K, K),
+  self() ! loop,
+  % erlang:send_after(L, self(), loop),
   {noreply, State};
 handle_info(Info, State) ->
   lager:warning("Unhandled info: ~p~n", [Info]),

@@ -27,12 +27,14 @@ metrics_get() ->
 metric_get(Name) ->
   D = folsom_metrics:get_metric_value(Name),
   One = proplists:get_value(one, D),
+  round(One / 60).
+
   %Count = proplists:get_value(count, D),
   %[{count, Count}, {num, One}],
-  One.
+
 
 restart_metric(Name) ->
-  case folsom_metrics:new_meter(Name) of
+  case folsom_metrics:new_spiral(Name) of
     ok -> ok;
     {error, Name, metric_already_exists} ->
       folsom_metrics:delete_metric(Name),

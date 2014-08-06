@@ -21,6 +21,7 @@ stop() ->
 
 
 init(Params) ->
+  process_flag(priority, max),
   %lager:info("Test with params: ~p", [Params]),
   StopTimeout = maps:get(time, Params, 10000),
   erlang:send_after(StopTimeout, self(), stop),
@@ -40,8 +41,9 @@ handle_cast(start_test, #st{params=P}=State) ->
   Db = InitDb(P),
   NewP = P#{db => Db},
   lager:info("Writers: ~p Readers: ~p", [NumWriters, NumReaders]),
-  [supervisor:start_child(tst_sup, [[NewP, RF]]) || _ <- lists:seq(1, NumReaders)],
-  [supervisor:start_child(tst_sup, [[NewP, WF]]) || _ <- lists:seq(1, NumWriters)],
+  spawn(fun () -> [supervisor:start_child(tst_sup, [[NewP, RF]]) || _ <- lists:seq(1, NumReaders)] end),
+  spawn(fun () ->[supervisor:start_child(tst_sup, [[NewP, WF]]) || _ <- lists:seq(1, NumWriters)] end),
+  timer:sleep(2000),
   lager:info("Start looping"),
   erlang:send_after(1000, self(), loop),
   {noreply, State};
@@ -58,9 +60,9 @@ handle_info(loop, #st{history=H}=State) ->
   {noreply, NewState};
 handle_info(stop, State) ->
   lager:info("Stop test"),
-  lager:info("State: ~p", [State]),
+  %lager:info("State: ~p", [State]),
   TstPids = [Pid || {_, Pid, _, _} <- supervisor:which_children(tst_sup)],
-  [supervisor:terminate_child(Pid) || Pid <- TstPids],
+  [supervisor:terminate_child(tst_sup, Pid) || Pid <- TstPids],
   timer:sleep(1000),
   {stop, normal, State};
 handle_info(Info, State) ->
