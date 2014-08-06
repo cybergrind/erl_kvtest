@@ -1,5 +1,4 @@
-erl_kvtest
-==========
+# erl_kvtest
 
 Erlang key-value storages test
 
@@ -15,7 +14,7 @@ make console
 
 For raw hacking see/edit `apps/kv_stats/src/ets_test.erl`
 
-h3. Some results
+### Some results
 
 **NOTE: now it possibly not correct at all**
 
